@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentiment Analysis</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link id="theme" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+    <style>
+        /* Light theme styles (default) */
+        body.light-mode {
+            background-color: white;
+            color: #000000;
+        }
+        .light-mode .navbar, .light-mode .btn-primary {
+            background-color: #007bff; /* Bootstrap primary blue */
+            color: white;
+        }
+
+        /* Dark theme styles */
+        body.dark-mode {
+            background-color: #343a40; /* Dark gray */
+            color: #dc3545; /* Bootstrap danger red */
+        }
+        .dark-mode .navbar, .dark-mode .btn-primary {
+            background-color: #dc3545; /* Bootstrap danger red */
+            color: black;
+        }
+
+        body {
+    font-family: 'Roboto', sans-serif;
+}
+
+button:hover {
+    opacity: 0.8;
+    transition: opacity 0.3s ease;
+}
+
+/* Improved form styling */
+.form-control, .btn {
+    border-radius: 20px;
+}
+
+/* Spinner for loading state */
+.spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 1s ease-in-out infinite;
+    -webkit-animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { -webkit-transform: rotate(360deg); }
+}
+@-webkit-keyframes spin {
+    to { -webkit-transform: rotate(360deg); }
+}
+
+/* Toggle switch */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+input:checked + .slider {
+    background-color: #2196F3;
+}
+
+input:focus + .slider {
+    box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .slider:before {
+    -webkit-transform: translateX(26px);
+    -ms-transform: translateX(26px);
+    transform: translateX(26px);
+}
+
+/* Rounded sliders */
+.slider.round {
+    border-radius: 34px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
+
+    </style>
+</head>
+<body class="light-mode"> <!-- Default to light mode -->
+    <div class="container mt-5">
+        <h2 class="mb-4">Movie Review Sentiment Analysis</h2>
+        <form action="/" method="post">
+            <div class="form-group">
+                <textarea class="form-control" name="review" rows="5" placeholder="Enter your movie review here..."></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Analyze Sentiment</button>
+            <!-- Theme Toggle Button -->
+            <button id="theme-toggle" class="btn btn-secondary" type="button">Toggle Dark Mode</button>
+        </form>
+        <div id="spinner" style="display: none;">
+            <img src="/static/images/Spinner-0.2s-191px.gif" alt="Loading..."/>
+        </div>
+        <div id="result"></div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form');
+        const spinner = document.getElementById('spinner');
+        const result = document.getElementById('result');
+
+        form.onsubmit = function(e) {
+            e.preventDefault(); // Prevent form from submitting normally
+            spinner.style.display = 'block'; // Show spinner
+            result.innerHTML = ''; // Clear previous result
+
+            const reviewText = document.querySelector('textarea[name="review"]').value;
+
+            fetch('/analyze', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ review: reviewText }),
+            })
+            .then(response => response.json())
+            .then(data => {
+            setTimeout(() => {
+                    console.log('delay')
+                    spinner.style.display = 'none'; // Hide spinner
+                    console.log(data.body)
+                result.innerHTML = `<p class="font-weight-bold">Sentiment Analysis Result: ${data.prediction}</p>`; // Show result
+            }, 1000)
+
+            })
+            .catch(error => {
+                spinner.style.display = 'none'; // Hide spinner on error
+                result.innerHTML = `<p class="text-danger">Error: Could not analyze sentiment</p>`; // Show error message
+                console.error('Error:', error);
+            });
+        };
+
+        const themeToggleButton = document.getElementById('theme-toggle');
+        const bodyElement = document.body;
+
+        // Function to switch theme and save preference
+        function toggleTheme() {
+            bodyElement.classList.toggle('dark-mode');
+            bodyElement.classList.toggle('light-mode');
+            localStorage.setItem('theme', bodyElement.classList.contains('dark-mode') ? 'dark' : 'light');
+        }
+
+        // Event listener for the theme toggle button
+        themeToggleButton.addEventListener('click', toggleTheme);
+
+        // Load the theme preference from local storage and apply it
+        window.onload = () => {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            bodyElement.classList.add(savedTheme + '-mode');
+        };
+        })
+    </script>
+</body>
+</html>
